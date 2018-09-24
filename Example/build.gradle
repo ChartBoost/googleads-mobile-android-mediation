@@ -25,7 +25,7 @@ ext {
     compileSdkVersion = 28
     targetSdkVersion = 28
 
-    support = '27.1.1' // 28.0.0 is bogus and won't let you compile
+    support = '28.0.0'
     appcompatV7 = "com.android.support:appcompat-v7:$support"
 
     play = '15.0.1'
