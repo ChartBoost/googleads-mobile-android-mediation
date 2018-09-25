@@ -20,6 +20,7 @@ android {
 
 dependencies {
     implementation rootProject.ext.appcompatV7
+    implementation rootProject.ext.playServicesAds
     implementation project(':chartboost')
     //implementation project(':customevent')
 }
