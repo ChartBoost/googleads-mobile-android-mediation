@@ -20,6 +20,6 @@ android {
 
 dependencies {
     implementation rootProject.ext.appcompatV7
-    implementation project(':adapter')
-    implementation project(':customevent')
+    implementation project(':chartboost')
+    //implementation project(':customevent')
 }
