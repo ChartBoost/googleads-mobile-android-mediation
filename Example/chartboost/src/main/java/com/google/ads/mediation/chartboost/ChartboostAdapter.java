@@ -22,12 +22,30 @@ import android.util.Log;
 import com.chartboost.sdk.CBLocation;
 import com.chartboost.sdk.Chartboost.CBFramework;
 import com.chartboost.sdk.Model.CBError;
+import com.chartboost.sdk.Sdk;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.mediation.MediationAdRequest;
 import com.google.android.gms.ads.mediation.MediationInterstitialAdapter;
 import com.google.android.gms.ads.mediation.MediationInterstitialListener;
+import com.google.android.gms.ads.mediation.OnContextChangedListener;
 import com.google.android.gms.ads.reward.mediation.MediationRewardedVideoAdAdapter;
 import com.google.android.gms.ads.reward.mediation.MediationRewardedVideoAdListener;
+
+import static com.chartboost.sdk.Trace.Trace.CHARTBOOST_CACHE_REWARDED_VIDEO;
+import static com.chartboost.sdk.Trace.Trace.CHARTBOOST_SHOW_INTERSTITIAL;
+import static com.chartboost.sdk.Trace.Trace.CHARTBOOST_SHOW_REWARDED_VIDEO;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_CACHE_INTERSTITIAL;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_CACHE_REWARDED;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_CLICK_INTERSTITIAL;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_CLICK_REWARDED;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_COMPLETE_REWARDED;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_DISMISS_INTERSTITIAL;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_DISMISS_REWARDED;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_DISPLAY_INTERSTITIAL;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_DISPLAY_REWARDED;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_FAIL_TO_LOAD_INTERSTITIAL;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_FAIL_TO_LOAD_REWARDED;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_INITIALIZE;
 
 /**
  * The {@link ChartboostAdapter} class is used to load Chartboost rewarded-based video &
@@ -35,7 +53,7 @@ import com.google.android.gms.ads.reward.mediation.MediationRewardedVideoAdListe
  */
 @Keep
 public class ChartboostAdapter implements MediationRewardedVideoAdAdapter,
-        MediationInterstitialAdapter {
+        MediationInterstitialAdapter, OnContextChangedListener {
     protected static final String TAG = ChartboostAdapter.class.getSimpleName();
 
     /**
@@ -100,6 +118,7 @@ public class ChartboostAdapter implements MediationRewardedVideoAdAdapter,
                 @Override
                 public void didCacheInterstitial(String location) {
                     super.didCacheInterstitial(location);
+                    Sdk.get().track.traceMediation(DELEGATE_DID_CACHE_INTERSTITIAL, location, "admob_adapter", ADAPTER_VERSION_NAME);
                     if (mMediationInterstitialListener != null && mIsLoading
                             && location.equals(mChartboostParams.getLocation())) {
                         mMediationInterstitialListener.onAdLoaded(ChartboostAdapter.this);
@@ -111,6 +130,7 @@ public class ChartboostAdapter implements MediationRewardedVideoAdAdapter,
                 public void didFailToLoadInterstitial(String location,
                                                       CBError.CBImpressionError error) {
                     super.didFailToLoadInterstitial(location, error);
+                    Sdk.get().track.traceMediation(DELEGATE_DID_FAIL_TO_LOAD_INTERSTITIAL, location, "admob_adapter", ADAPTER_VERSION_NAME);
                     if (mMediationInterstitialListener != null
                             && location.equals(mChartboostParams.getLocation())) {
                         if (mIsLoading) {
@@ -131,6 +151,7 @@ public class ChartboostAdapter implements MediationRewardedVideoAdAdapter,
                 @Override
                 public void didDismissInterstitial(String location) {
                     super.didDismissInterstitial(location);
+                    Sdk.get().track.traceMediation(DELEGATE_DID_DISMISS_INTERSTITIAL, location, "admob_adapter", ADAPTER_VERSION_NAME);
                     if (mMediationInterstitialListener != null) {
                         mMediationInterstitialListener.onAdClosed(ChartboostAdapter.this);
                     }
@@ -139,6 +160,7 @@ public class ChartboostAdapter implements MediationRewardedVideoAdAdapter,
                 @Override
                 public void didClickInterstitial(String location) {
                     super.didClickInterstitial(location);
+                    Sdk.get().track.traceMediation(DELEGATE_DID_CLICK_INTERSTITIAL, location, "admob_adapter", ADAPTER_VERSION_NAME);
                     if (mMediationInterstitialListener != null) {
                         // Chartboost doesn't have a delegate method for when an ad left
                         // application. Assuming that when an interstitial ad is clicked and the
@@ -152,6 +174,7 @@ public class ChartboostAdapter implements MediationRewardedVideoAdAdapter,
                 @Override
                 public void didDisplayInterstitial(String location) {
                     super.didDisplayInterstitial(location);
+                    Sdk.get().track.traceMediation(DELEGATE_DID_DISPLAY_INTERSTITIAL, location, "admob_adapter", ADAPTER_VERSION_NAME);
                     if (mMediationInterstitialListener != null) {
                         mMediationInterstitialListener.onAdOpened(ChartboostAdapter.this);
                     }
@@ -173,6 +196,7 @@ public class ChartboostAdapter implements MediationRewardedVideoAdAdapter,
                 @Override
                 public void didInitialize() {
                     super.didInitialize();
+                    Sdk.get().track.traceMediation(DELEGATE_DID_INITIALIZE, null, "admob_adapter", ADAPTER_VERSION_NAME);
                     if (mMediationRewardedVideoAdListener != null && !mIsInitialized) {
                         mIsInitialized = true;
                         mMediationRewardedVideoAdListener.onInitializationSucceeded(
@@ -183,6 +207,7 @@ public class ChartboostAdapter implements MediationRewardedVideoAdAdapter,
                 @Override
                 public void didCacheRewardedVideo(String location) {
                     super.didCacheRewardedVideo(location);
+                    Sdk.get().track.traceMediation(DELEGATE_DID_CACHE_REWARDED, location, "admob_adapter", ADAPTER_VERSION_NAME);
                     if (mMediationRewardedVideoAdListener != null && mIsLoading
                             && location.equals(mChartboostParams.getLocation())) {
                         mMediationRewardedVideoAdListener.onAdLoaded(ChartboostAdapter.this);
@@ -194,6 +219,7 @@ public class ChartboostAdapter implements MediationRewardedVideoAdAdapter,
                 public void didFailToLoadRewardedVideo(String location,
                                                        CBError.CBImpressionError error) {
                     super.didFailToLoadRewardedVideo(location, error);
+                    Sdk.get().track.traceMediation(DELEGATE_DID_FAIL_TO_LOAD_REWARDED, location, "admob_adapter", ADAPTER_VERSION_NAME);
                     if (mMediationRewardedVideoAdListener != null
                             && location.equals(mChartboostParams.getLocation())) {
                         if (mIsLoading) {
@@ -214,6 +240,7 @@ public class ChartboostAdapter implements MediationRewardedVideoAdAdapter,
                 @Override
                 public void didDismissRewardedVideo(String location) {
                     super.didDismissRewardedVideo(location);
+                    Sdk.get().track.traceMediation(DELEGATE_DID_DISMISS_REWARDED, location, "admob_adapter", ADAPTER_VERSION_NAME);
                     if (mMediationRewardedVideoAdListener != null) {
                         mMediationRewardedVideoAdListener.onAdClosed(ChartboostAdapter.this);
                     }
@@ -222,6 +249,7 @@ public class ChartboostAdapter implements MediationRewardedVideoAdAdapter,
                 @Override
                 public void didClickRewardedVideo(String location) {
                     super.didClickRewardedVideo(location);
+                    Sdk.get().track.traceMediation(DELEGATE_DID_CLICK_REWARDED, location, "admob_adapter", ADAPTER_VERSION_NAME);
                     if (mMediationRewardedVideoAdListener != null) {
                         // Chartboost doesn't have an on ad left application callback. We assume
                         // that when an ad is clicked the user is taken out of the app.
@@ -234,6 +262,7 @@ public class ChartboostAdapter implements MediationRewardedVideoAdAdapter,
                 @Override
                 public void didCompleteRewardedVideo(String location, int reward) {
                     super.didCompleteRewardedVideo(location, reward);
+                    Sdk.get().track.traceMediation(DELEGATE_DID_COMPLETE_REWARDED, location, "admob_adapter", ADAPTER_VERSION_NAME);
                     if (mMediationRewardedVideoAdListener != null) {
                         mMediationRewardedVideoAdListener.onVideoCompleted(ChartboostAdapter.this);
                         mMediationRewardedVideoAdListener.onRewarded(ChartboostAdapter.this,
@@ -244,6 +273,7 @@ public class ChartboostAdapter implements MediationRewardedVideoAdAdapter,
                 @Override
                 public void didDisplayRewardedVideo(String location) {
                     super.didDisplayRewardedVideo(location);
+                    Sdk.get().track.traceMediation(DELEGATE_DID_DISPLAY_REWARDED, location, "admob_adapter", ADAPTER_VERSION_NAME);
                     if (mMediationRewardedVideoAdListener != null) {
                         // Charboost doesn't have a video started callback. We assume that the video
                         // started once the ad has been displayed.
@@ -383,6 +413,7 @@ public class ChartboostAdapter implements MediationRewardedVideoAdAdapter,
                                       Bundle serverParameters,
                                       MediationAdRequest mediationAdRequest,
                                       Bundle networkExtras) {
+        // FIXME sdk should be initialized here... Sdk.get().track.traceMediation(CHARTBOOST_CACHE_INTERSTITIAL, mChartboostParams.getLocation(), "admob_adapter", ADAPTER_VERSION_NAME);
         mMediationInterstitialListener = mediationInterstitialListener;
 
         mChartboostParams = createChartboostParams(serverParameters, networkExtras);
@@ -412,6 +443,7 @@ public class ChartboostAdapter implements MediationRewardedVideoAdAdapter,
 
     @Override
     public void showInterstitial() {
+        Sdk.get().track.traceMediation(CHARTBOOST_SHOW_INTERSTITIAL, mChartboostParams.getLocation(), "admob_adapter", ADAPTER_VERSION_NAME);
         // Request ChartboostSingleton to show interstitial ads.
         ChartboostSingleton.showInterstitialAd(mChartboostInterstitialDelegate);
     }
@@ -449,6 +481,7 @@ public class ChartboostAdapter implements MediationRewardedVideoAdAdapter,
     public void loadAd(MediationAdRequest mediationAdRequest,
                        Bundle serverParameters,
                        Bundle networkExtras) {
+        Sdk.get().track.traceMediation(CHARTBOOST_CACHE_REWARDED_VIDEO, mChartboostParams.getLocation(), "admob_adapter", ADAPTER_VERSION_NAME);
         // Update mChartboostParams before loading ads.
         mChartboostParams = createChartboostParams(serverParameters, networkExtras);
         // Request singleton to load rewarded video ad.
@@ -458,6 +491,7 @@ public class ChartboostAdapter implements MediationRewardedVideoAdAdapter,
 
     @Override
     public void showVideo() {
+        Sdk.get().track.traceMediation(CHARTBOOST_SHOW_REWARDED_VIDEO, mChartboostParams.getLocation(), "admob_adapter", ADAPTER_VERSION_NAME);
         // Request ChartboostSingleton to show rewarded video ad.
         ChartboostSingleton.showRewardedVideoAd(mChartboostRewardedVideoDelegate);
     }
@@ -477,6 +511,10 @@ public class ChartboostAdapter implements MediationRewardedVideoAdAdapter,
 
     @Override
     public void onResume() {
+    }
+
+    @Override
+    public void onContextChanged(Context context) {
     }
 
     /**

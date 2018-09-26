@@ -32,10 +32,8 @@ android {
 }
 
 dependencies {
-    // Adding Chartboost SDK as a compileOnly dependency makes sure that the jar is not included in the
-    // AAR.
-    compileOnly files('libs/chartboost.jar')
-    implementation rootProject.ext.playServicesAds
+    api fileTree(dir: 'libs', include: ['*.jar'])
+    api rootProject.ext.playServicesAds
 }
 
 /**

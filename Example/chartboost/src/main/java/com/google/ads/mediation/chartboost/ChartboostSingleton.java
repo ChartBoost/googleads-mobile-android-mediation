@@ -23,12 +23,37 @@ import com.chartboost.sdk.Chartboost;
 import com.chartboost.sdk.ChartboostDelegate;
 import com.chartboost.sdk.Libraries.CBLogging;
 import com.chartboost.sdk.Model.CBError;
+import com.chartboost.sdk.Sdk;
 
 import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+
+import static com.chartboost.sdk.Trace.Trace.CHARTBOOST_CACHE_INTERSTITIAL;
+import static com.chartboost.sdk.Trace.Trace.CHARTBOOST_CACHE_REWARDED_VIDEO;
+import static com.chartboost.sdk.Trace.Trace.CHARTBOOST_HAS_INTERSTITIAL;
+import static com.chartboost.sdk.Trace.Trace.CHARTBOOST_HAS_REWARDED_VIDEO;
+import static com.chartboost.sdk.Trace.Trace.CHARTBOOST_SET_AUTO_CACHE_ADS;
+import static com.chartboost.sdk.Trace.Trace.CHARTBOOST_SHOW_INTERSTITIAL;
+import static com.chartboost.sdk.Trace.Trace.CHARTBOOST_SHOW_REWARDED_VIDEO;
+import static com.chartboost.sdk.Trace.Trace.CHARTBOOST_START_WITH_APP_ID;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_CACHE_INTERSTITIAL;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_CACHE_REWARDED;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_CLICK_INTERSTITIAL;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_CLICK_REWARDED;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_COMPLETE_REWARDED;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_DISMISS_INTERSTITIAL;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_DISMISS_REWARDED;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_DISPLAY_INTERSTITIAL;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_DISPLAY_REWARDED;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_FAIL_TO_LOAD_INTERSTITIAL;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_FAIL_TO_LOAD_REWARDED;
+import static com.chartboost.sdk.Trace.Trace.DELEGATE_DID_INITIALIZE;
+import static com.chartboost.sdk.Trace.Trace.SDKSETTINGS_ASSIGN_DELEGATE;
+import static com.chartboost.sdk.Trace.Trace.SDKSETTINGS_CLEAR_DELEGATE;
+import static com.google.ads.mediation.chartboost.ChartboostAdapter.ADAPTER_VERSION_NAME;
 
 /**
  * The {@link ChartboostSingleton} class is used to load Chartboost ads and manage multiple
@@ -121,8 +146,10 @@ public final class ChartboostSingleton {
         while (iterator.hasNext()) {
             AbstractChartboostAdapterDelegate delegate = iterator.next().get();
             if (delegate == null) {
+                Sdk.get().track.traceMediation(SDKSETTINGS_CLEAR_DELEGATE, null, "admob_singleton", ADAPTER_VERSION_NAME);
                 iterator.remove();
             } else if (currentDelegate.equals(delegate)) {
+                Sdk.get().track.traceMediation(SDKSETTINGS_CLEAR_DELEGATE, null, "admob_singleton", ADAPTER_VERSION_NAME);
                 iterator.remove();
             }
         }
@@ -161,6 +188,7 @@ public final class ChartboostSingleton {
      */
     public static boolean startChartboostRewardedVideo(
             Context context, AbstractChartboostAdapterDelegate adapterDelegate) {
+        // FIXME sdk should be initialized here... Sdk.get().track.traceMediation(CHARTBOOST_CACHE_REWARDED_VIDEO, adapterDelegate.getChartboostParams().getLocation(), "admob_singleton", ADAPTER_VERSION_NAME);
         // Add this adapter delegate to mInterstitialDelegatesSet so that the events from
         // Chartboost SDK can be forwarded.
         addRewardedVideoDelegate(adapterDelegate);
@@ -207,7 +235,6 @@ public final class ChartboostSingleton {
      *                 to be used to start {@link Chartboost}.
      */
     private static void startChartboost(Activity activity, ChartboostParams params) {
-
         if (params.getFramework() != null
                 && !TextUtils.isEmpty(params.getFrameworkVersion())) {
             Chartboost.setFramework(params.getFramework(), params.getFrameworkVersion());
@@ -215,11 +242,14 @@ public final class ChartboostSingleton {
 
         if (!mIsChartboostInitialized) {
             Chartboost.startWithAppId(activity, params.getAppId(), params.getAppSignature());
+            Sdk.get().track.traceMediation(CHARTBOOST_START_WITH_APP_ID, null, "admob_singleton", ADAPTER_VERSION_NAME);
 
             Chartboost.setMediation(Chartboost.CBMediation.CBMediationAdMob,
-                    ChartboostAdapter.ADAPTER_VERSION_NAME);
-            Chartboost.setLoggingLevel(CBLogging.Level.INTEGRATION);
+                    ADAPTER_VERSION_NAME);
+            Chartboost.setLoggingLevel(CBLogging.Level.ALL);
+            Sdk.get().track.traceMediation(SDKSETTINGS_ASSIGN_DELEGATE, null, "admob_singleton", ADAPTER_VERSION_NAME);
             Chartboost.setDelegate(getInstance());
+            Sdk.get().track.traceMediation(CHARTBOOST_SET_AUTO_CACHE_ADS, null, "admob_singleton", ADAPTER_VERSION_NAME);
             Chartboost.setAutoCacheAds(true);
 
             // Chartboost depends on Activity's lifecycle events to initialize its SDK. Chartboost
@@ -246,10 +276,12 @@ public final class ChartboostSingleton {
         // Get the location for which the ads need to be loaded.
         String location = delegate.getChartboostParams().getLocation();
         if (Chartboost.hasInterstitial(location)) {
+            Sdk.get().track.traceMediation(CHARTBOOST_HAS_INTERSTITIAL, location, "admob_singleton", ADAPTER_VERSION_NAME);
             // Interstitial ad already cached and is ready to be shown, send onAdLoaded event to
             // the adapter.
             delegate.didCacheInterstitial(location);
         } else {
+            Sdk.get().track.traceMediation(CHARTBOOST_CACHE_INTERSTITIAL, location, "admob_singleton", ADAPTER_VERSION_NAME);
             // Ad not cached for mLocation yet, request Chartboost to cache interstitial ads for
             // the given location.
             Chartboost.cacheInterstitial(location);
@@ -263,6 +295,7 @@ public final class ChartboostSingleton {
      *                 delegate.
      */
     protected static void showInterstitialAd(AbstractChartboostAdapterDelegate delegate) {
+        Sdk.get().track.traceMediation(CHARTBOOST_SHOW_INTERSTITIAL, delegate.getChartboostParams().getLocation(), "admob_singleton", ADAPTER_VERSION_NAME);
         mAdShowingAdapterDelegate = new WeakReference<>(delegate);
         // Displays a cached interstitial if available, else loads from server.
         Chartboost.showInterstitial(delegate.getChartboostParams().getLocation());
@@ -280,9 +313,11 @@ public final class ChartboostSingleton {
         // Get the location for which the ads need to be loaded.
         String location = delegate.getChartboostParams().getLocation();
         if (Chartboost.hasRewardedVideo(location)) {
+            Sdk.get().track.traceMediation(CHARTBOOST_HAS_REWARDED_VIDEO, location, "admob_singleton", ADAPTER_VERSION_NAME);
             // Video ad already cached and ready to show, send onAdLoaded event to the adapter.
             delegate.didCacheRewardedVideo(location);
         } else {
+            Sdk.get().track.traceMediation(CHARTBOOST_CACHE_REWARDED_VIDEO, location, "admob_singleton", ADAPTER_VERSION_NAME);
             // Ad not cached for mLocation yet, request Chartboost to cache rewarded video for
             // the given location.
             Chartboost.cacheRewardedVideo(location);
@@ -296,6 +331,7 @@ public final class ChartboostSingleton {
      *                 show ads.
      */
     protected static void showRewardedVideoAd(AbstractChartboostAdapterDelegate delegate) {
+        Sdk.get().track.traceMediation(CHARTBOOST_SHOW_REWARDED_VIDEO, delegate.getChartboostParams().getLocation(), "admob_singleton", ADAPTER_VERSION_NAME);
         mAdShowingAdapterDelegate = new WeakReference<>(delegate);
         // Displays a cached video if available, else loads from server.
         Chartboost.showRewardedVideo(delegate.getChartboostParams().getLocation());
@@ -313,6 +349,7 @@ public final class ChartboostSingleton {
         public void didCacheInterstitial(String location) {
             // Interstitial ad has been loaded from the Chartboost API servers and cached locally.
             super.didCacheInterstitial(location);
+            Sdk.get().track.traceMediation(DELEGATE_DID_CACHE_INTERSTITIAL, location, "admob_singleton", ADAPTER_VERSION_NAME);
             Iterator<WeakReference<AbstractChartboostAdapterDelegate>> iterator =
                     mInterstitialDelegatesSet.iterator();
             while (iterator.hasNext()) {
@@ -328,6 +365,7 @@ public final class ChartboostSingleton {
         @Override
         public void didFailToLoadInterstitial(String location, CBError.CBImpressionError error) {
             super.didFailToLoadInterstitial(location, error);
+            Sdk.get().track.traceMediation(DELEGATE_DID_FAIL_TO_LOAD_INTERSTITIAL, location, "admob_singleton", ADAPTER_VERSION_NAME);
             if (error == CBError.CBImpressionError.INTERNET_UNAVAILABLE_AT_SHOW) {
                 // Chartboost SDK failed to show an ad. Notify the current showing adapter delegate.
                 AbstractChartboostAdapterDelegate delegate = mAdShowingAdapterDelegate.get();
@@ -354,6 +392,7 @@ public final class ChartboostSingleton {
         public void didDisplayInterstitial(String location) {
             // Interstitial ad has been displayed on the screen.
             super.didDisplayInterstitial(location);
+            Sdk.get().track.traceMediation(DELEGATE_DID_DISPLAY_INTERSTITIAL, location, "admob_singleton", ADAPTER_VERSION_NAME);
             if (mAdShowingAdapterDelegate != null) {
                 AbstractChartboostAdapterDelegate adapter = mAdShowingAdapterDelegate.get();
                 if (adapter != null) {
@@ -366,6 +405,7 @@ public final class ChartboostSingleton {
         public void didDismissInterstitial(String location) {
             // Interstitial ad has been dismissed.
             super.didDismissInterstitial(location);
+            Sdk.get().track.traceMediation(DELEGATE_DID_DISMISS_INTERSTITIAL, location, "admob_singleton", ADAPTER_VERSION_NAME);
             if (mAdShowingAdapterDelegate != null) {
                 AbstractChartboostAdapterDelegate delegate = mAdShowingAdapterDelegate.get();
                 if (delegate != null) {
@@ -378,6 +418,7 @@ public final class ChartboostSingleton {
         public void didClickInterstitial(String location) {
             // Interstitial ad has been clicked.
             super.didClickInterstitial(location);
+            Sdk.get().track.traceMediation(DELEGATE_DID_CLICK_INTERSTITIAL, location, "admob_singleton", ADAPTER_VERSION_NAME);
             if (mAdShowingAdapterDelegate != null) {
                 AbstractChartboostAdapterDelegate delegate = mAdShowingAdapterDelegate.get();
                 if (delegate != null) {
@@ -391,6 +432,7 @@ public final class ChartboostSingleton {
             // Chartboost SDK has been successfully initialized and video pre-fetching has been
             // completed.
             super.didInitialize();
+            Sdk.get().track.traceMediation(DELEGATE_DID_INITIALIZE, null, "admob_singleton", ADAPTER_VERSION_NAME);
             mIsChartboostInitialized = true;
             for (WeakReference<AbstractChartboostAdapterDelegate> weakReference
                     : mRewardedVideoDelegatesSet) {
@@ -405,6 +447,7 @@ public final class ChartboostSingleton {
         public void didCacheRewardedVideo(String location) {
             // Rewarded video has been loaded from the Chartboost API servers and cached locally.
             super.didCacheRewardedVideo(location);
+            Sdk.get().track.traceMediation(DELEGATE_DID_CACHE_REWARDED, location, "admob_singleton", ADAPTER_VERSION_NAME);
             for (WeakReference<AbstractChartboostAdapterDelegate> weakReference
                     : mRewardedVideoDelegatesSet) {
                 AbstractChartboostAdapterDelegate delegate = weakReference.get();
@@ -418,6 +461,7 @@ public final class ChartboostSingleton {
         @Override
         public void didFailToLoadRewardedVideo(String location, CBError.CBImpressionError error) {
             super.didFailToLoadRewardedVideo(location, error);
+            Sdk.get().track.traceMediation(DELEGATE_DID_FAIL_TO_LOAD_REWARDED, location, "admob_singleton", ADAPTER_VERSION_NAME);
             if (error == CBError.CBImpressionError.INTERNET_UNAVAILABLE_AT_SHOW) {
                 // Chartboost SDK failed to show an ad. Notify the current showing adapter delegate.
                 AbstractChartboostAdapterDelegate delegate = mAdShowingAdapterDelegate.get();
@@ -442,6 +486,7 @@ public final class ChartboostSingleton {
         public void didClickRewardedVideo(String location) {
             // Rewarded video has been clicked.
             super.didClickRewardedVideo(location);
+            Sdk.get().track.traceMediation(DELEGATE_DID_CLICK_REWARDED, location, "admob_singleton", ADAPTER_VERSION_NAME);
             if (mAdShowingAdapterDelegate != null) {
                 AbstractChartboostAdapterDelegate delegate = mAdShowingAdapterDelegate.get();
                 if (delegate != null) {
@@ -454,6 +499,7 @@ public final class ChartboostSingleton {
         public void didDisplayRewardedVideo(String location) {
             // Rewarded video has been displayed on the screen.
             super.didDisplayRewardedVideo(location);
+            Sdk.get().track.traceMediation(DELEGATE_DID_DISPLAY_REWARDED, location, "admob_singleton", ADAPTER_VERSION_NAME);
             if (mAdShowingAdapterDelegate != null) {
                 AbstractChartboostAdapterDelegate delegate = mAdShowingAdapterDelegate.get();
                 if (delegate != null) {
@@ -466,6 +512,7 @@ public final class ChartboostSingleton {
         public void didCompleteRewardedVideo(String location, int reward) {
             // Rewarded video has been viewed completely and user is eligible for reward.
             super.didCompleteRewardedVideo(location, reward);
+            Sdk.get().track.traceMediation(DELEGATE_DID_COMPLETE_REWARDED, location, "admob_singleton", ADAPTER_VERSION_NAME);
             if (mAdShowingAdapterDelegate != null) {
                 AbstractChartboostAdapterDelegate delegate = mAdShowingAdapterDelegate.get();
                 if (delegate != null) {
@@ -478,6 +525,7 @@ public final class ChartboostSingleton {
         public void didDismissRewardedVideo(String location) {
             // Rewarded video has been dismissed.
             super.didDismissRewardedVideo(location);
+            Sdk.get().track.traceMediation(DELEGATE_DID_DISMISS_REWARDED, location, "admob_singleton", ADAPTER_VERSION_NAME);
             if (mAdShowingAdapterDelegate != null) {
                 AbstractChartboostAdapterDelegate delegate = mAdShowingAdapterDelegate.get();
                 if (delegate != null) {

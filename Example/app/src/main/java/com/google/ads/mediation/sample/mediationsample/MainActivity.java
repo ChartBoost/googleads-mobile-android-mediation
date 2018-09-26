@@ -22,6 +22,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.chartboost.sdk.Chartboost;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
@@ -31,8 +32,8 @@ import com.google.android.gms.ads.reward.RewardedVideoAd;
 import com.google.android.gms.ads.reward.RewardedVideoAdListener;
 
 /**
- * A simple {@link android.app.Activity} that displays adds using the sample adapter and sample
- * custom event.
+ * A simple {@link android.app.Activity} that displays ads using the Chartboost adapter with
+ * extra logging added.
  */
 public class MainActivity extends AppCompatActivity {
 
@@ -46,7 +47,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Sample adapter interstitial button.
+        //  interstitial
+
         adapterButton = (Button) findViewById(R.id.adapter_button);
         adapterButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -57,11 +59,10 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Sample adapter interstitial.
         adapterInterstitial = new InterstitialAd(this);
         adapterInterstitial.setAdUnitId(
                 getResources().getString(R.string.adapter_interstitial_ad_unit_id));
-        adapterInterstitial.setAdListener(new AdListener() {
+        adapterInterstitial.setAdListener(new AdListener() { // interstitial delegate
             @Override
             public void onAdFailedToLoad(int errorCode) {
                 Toast.makeText(MainActivity.this,
@@ -90,7 +91,9 @@ public class MainActivity extends AppCompatActivity {
                 .build();
         adapterInterstitial.loadAd(interstitialAdRequest);
 
-        // Sample adapter rewarded video button.
+
+        //  rewarded video
+
         adapterVideoButton = (Button) findViewById(R.id.adapter_rewarded_button);
         adapterVideoButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -103,11 +106,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        /**
-         * Sample adapter rewarded video ad.
-         */
         rewardedVideoAd = MobileAds.getRewardedVideoAdInstance(this);
-        rewardedVideoAd.setRewardedVideoAdListener(new RewardedVideoAdListener() {
+        rewardedVideoAd.setRewardedVideoAdListener(new RewardedVideoAdListener() { // rewarded video delegate
             @Override
             public void onRewardedVideoAdLoaded() {
                 adapterVideoButton.setEnabled(true);
@@ -147,16 +147,49 @@ public class MainActivity extends AppCompatActivity {
         loadRewardedVideoAd();
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        // Activity resumed, update the current activity in Sample SDK's sample rewarded video.
-        rewardedVideoAd.resume(MainActivity.this);
-    }
-
     private void loadRewardedVideoAd() {
         adapterVideoButton.setEnabled(false);
         rewardedVideoAd.loadAd(getString(R.string.adapter_rewarded_video_ad_unit_id),
                 new AdRequest.Builder().build());
+    }
+
+    // these are recommended as per https://developers.google.com/admob/android/mediation/chartboost
+    @Override
+    public void onStart() {
+        super.onStart();
+        Chartboost.onStart(this);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        Chartboost.onResume(this);
+        if (rewardedVideoAd!=null) rewardedVideoAd.resume(MainActivity.this);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Chartboost.onPause(this);
+        if (rewardedVideoAd!=null) rewardedVideoAd.pause(MainActivity.this);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        Chartboost.onStop(this);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Chartboost.onDestroy(this);
+        if (rewardedVideoAd!=null) rewardedVideoAd.destroy(MainActivity.this);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (!Chartboost.onBackPressed())
+            super.onBackPressed();
     }
 }
