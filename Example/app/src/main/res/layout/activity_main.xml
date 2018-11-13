@@ -1,5 +1,4 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:ads="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -21,7 +20,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:text="Show SampleAdapter Interstitial" />
+            android:text="@string/show_int" />
 
         <Button
             android:id="@+id/adapter_rewarded_button"
@@ -29,7 +28,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
             android:enabled="false"
-            android:text="Show SampleAdapter Rewarded Video" />
+            android:text="@string/show_rew" />
 
     </LinearLayout>
 </ScrollView>

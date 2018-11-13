@@ -1,3 +1,5 @@
+**Note before using this fork: it contains logging examples for AdMob and IronSource (both use a special logging version of the Chartboost SDK as well as a logging version of their adapter). This is ONLY for debugging mediation. The license does not apply to IronSource's adapter (which we decompiled from the binary).**
+
 Google Mobile Ads SDK - Android Mediation
 =========================================
 The Google Mobile Ads SDK is the latest generation in Google mobile advertising,

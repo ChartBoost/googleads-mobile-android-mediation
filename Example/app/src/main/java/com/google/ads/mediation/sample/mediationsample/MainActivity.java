@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity {
 
         //  interstitial
 
-        adapterButton = (Button) findViewById(R.id.adapter_button);
+        adapterButton = findViewById(R.id.adapter_button);
         adapterButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -83,18 +83,15 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onAdClosed() {
-                adapterInterstitial.loadAd(new AdRequest.Builder().build());
+                adapterInterstitial.loadAd(new AdRequest.Builder().addTestDevice("3A72DD7886EC9C8590E79F0F4E72F915").build());
             }
         });
-
-        AdRequest interstitialAdRequest = new AdRequest.Builder()
-                .build();
-        adapterInterstitial.loadAd(interstitialAdRequest);
+        adapterInterstitial.loadAd(new AdRequest.Builder().addTestDevice("3A72DD7886EC9C8590E79F0F4E72F915").build());
 
 
         //  rewarded video
 
-        adapterVideoButton = (Button) findViewById(R.id.adapter_rewarded_button);
+        adapterVideoButton = findViewById(R.id.adapter_rewarded_button);
         adapterVideoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -111,7 +108,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onRewardedVideoAdLoaded() {
                 adapterVideoButton.setEnabled(true);
-                adapterVideoButton.setText("Show SampleAdapter Rewarded Video");
             }
 
             @Override
@@ -137,7 +133,6 @@ public class MainActivity extends AppCompatActivity {
                         "Sample adapter rewarded video ad failed with code: " + errorCode,
                         Toast.LENGTH_SHORT).show();
                 adapterVideoButton.setEnabled(true);
-                adapterVideoButton.setText("Load SampleAdapter Rewarded Video");
             }
 
             @Override
@@ -150,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
     private void loadRewardedVideoAd() {
         adapterVideoButton.setEnabled(false);
         rewardedVideoAd.loadAd(getString(R.string.adapter_rewarded_video_ad_unit_id),
-                new AdRequest.Builder().build());
+                new AdRequest.Builder().addTestDevice("3A72DD7886EC9C8590E79F0F4E72F915").build());
     }
 
     // these are recommended as per https://developers.google.com/admob/android/mediation/chartboost

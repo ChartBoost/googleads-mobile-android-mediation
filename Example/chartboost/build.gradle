@@ -34,6 +34,7 @@ android {
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
     api rootProject.ext.playServicesAds
+    api rootProject.ext.playServicesBase
 }
 
 /**

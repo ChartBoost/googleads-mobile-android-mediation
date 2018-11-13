@@ -2,4 +2,6 @@
     <string name="app_name">Mediation Sample</string>
     <string name="adapter_interstitial_ad_unit_id">ca-app-pub-3251915621593999/2750871757</string>
     <string name="adapter_rewarded_video_ad_unit_id">ca-app-pub-3251915621593999/6239553722</string>
+    <string name="show_int">Show Interstitial</string>
+    <string name="show_rew">Show (or load) Rewarded Video</string>
 </resources>
