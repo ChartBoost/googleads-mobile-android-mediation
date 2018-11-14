@@ -10,7 +10,6 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.ironsource.adapters.supersonicads.SupersonicConfig;
 import com.ironsource.mediationsdk.IronSource;
 import com.ironsource.mediationsdk.logger.IronSourceError;
 import com.ironsource.mediationsdk.model.Placement;
@@ -21,10 +20,9 @@ import com.ironsource.mediationsdk.utils.IronSourceUtils;
 public class DemoActivity extends Activity implements RewardedVideoListener, InterstitialListener {
 
     private final String TAG = "DemoActivity";
-    private static final String APP_KEY = "4ea90fad";//"7264149d"; -- gives : onInterstitialAdLoadFailed errorCode:510, errorMessage:no ads to load
+    private static final String APP_KEY = "7264149d";
     private static final String DUMMY_GAID = "cb885ef9-469f-4a70-8d00-86184ac711a8";
     private Button mVideoButton;
-    private Button mInterstitialLoadButton;
     private Button mInterstitialShowButton;
 
     private Placement mPlacement;
@@ -35,8 +33,6 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
         setContentView(R.layout.activity_demo);
         initUIElements();
         initIronSource();
-        IronSource.shouldTrackNetworkState(this, true);
-
     }
 
     private void initIronSource() {
@@ -76,9 +72,7 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
      */
     private void updateButtonsState() {
             handleVideoButtonState(IronSource.isRewardedVideoAvailable());
-            handleLoadInterstitialButtonState(true);
-            handleInterstitialShowButtonState(false);
-
+            handleInterstitialShowButtonState(IronSource.isInterstitialReady());
     }
 
 
@@ -98,16 +92,7 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
             }
         });
 
-        mInterstitialLoadButton = findViewById(R.id.is_button_1);
-        mInterstitialLoadButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                IronSource.loadInterstitial();
-            }
-        });
-
-
-        mInterstitialShowButton = findViewById(R.id.is_button_2);
+        mInterstitialShowButton = findViewById(R.id.is_button);
         mInterstitialShowButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -150,17 +135,16 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
     }
 
     /**
-     * Set the Interstitial button state according to the product's state
+     * Set the Show Interstitial button state according to the product's state
      *
      * @param available if the interstitial is available
      */
-    public void handleLoadInterstitialButtonState(final boolean available) {
-        Log.d(TAG, "handleInterstitialButtonState | available: " + available);
+    public void handleInterstitialShowButtonState(final boolean available) {
         final String text;
         final int color;
         if (available) {
             color = Color.BLUE;
-            text = getResources().getString(R.string.load) + " " + getResources().getString(R.string.is);
+            text = getResources().getString(R.string.show) + " " + getResources().getString(R.string.is);
         } else {
             color = Color.BLACK;
             text = getResources().getString(R.string.initializing) + " " + getResources().getString(R.string.is);
@@ -168,30 +152,8 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                mInterstitialLoadButton.setTextColor(color);
-                mInterstitialLoadButton.setText(text);
-                mInterstitialLoadButton.setEnabled(available);
-            }
-        });
-
-    }
-
-    /**
-     * Set the Show Interstitial button state according to the product's state
-     *
-     * @param available if the interstitial is available
-     */
-    public void handleInterstitialShowButtonState(final boolean available) {
-        final int color;
-        if (available) {
-            color = Color.BLUE;
-        } else {
-            color = Color.BLACK;
-        }
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
                 mInterstitialShowButton.setTextColor(color);
+                mInterstitialShowButton.setText(text);
                 mInterstitialShowButton.setEnabled(available);
             }
         });
@@ -294,6 +256,7 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
         // called when the interstitial has been closed
         Log.d(TAG, "onInterstitialAdClosed");
         handleInterstitialShowButtonState(false);
+        IronSource.loadInterstitial();
     }
 
     @Override

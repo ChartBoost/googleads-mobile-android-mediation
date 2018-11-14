@@ -14,6 +14,7 @@ import com.chartboost.sdk.Libraries.CBLogging.Level;
 import com.chartboost.sdk.Model.CBError.CBImpressionError;
 import com.ironsource.mediationsdk.AbstractAdapter;
 import com.ironsource.mediationsdk.IntegrationData;
+import com.ironsource.mediationsdk.IronSource;
 import com.ironsource.mediationsdk.sdk.InterstitialSmashListener;
 import com.ironsource.mediationsdk.sdk.RewardedVideoSmashListener;
 import com.ironsource.mediationsdk.utils.ErrorBuilder;
@@ -64,13 +65,13 @@ class ChartboostAdapter extends AbstractAdapter {
     }
 
     public static IntegrationData getIntegrationData(Activity activity) {
-        IntegrationData ret = new IntegrationData("Chartboost", "4.1.4");
+        IntegrationData ret = new IntegrationData("Chartboost", VERSION);
         ret.activities = new String[]{"com.chartboost.sdk.CBImpressionActivity"};
         return ret;
     }
 
     public String getVersion() {
-        return "4.1.4";
+        return VERSION;
     }
 
     public String getCoreSDKVersion() {
@@ -116,7 +117,7 @@ class ChartboostAdapter extends AbstractAdapter {
                         }
 
                         Chartboost.startWithAppId(activity, appId, appSignature);
-                        Chartboost.setDelegate(ChartboostAdapter.this.mDelegate); // FIXED: start Chartboost before calling this
+                        Chartboost.setDelegate(ChartboostAdapter.this.mDelegate);
                         boolean isDebugEnabled = false;
 
                         try {
@@ -135,7 +136,7 @@ class ChartboostAdapter extends AbstractAdapter {
                             Chartboost.setFramework(CBFramework.CBFrameworkUnity, ChartboostAdapter.this.getPluginFrameworkVersion());
                         }
 
-                        Chartboost.setMediation(CBMediation.CBMediationironSource, "4.1.4");
+                        Chartboost.setMediation(CBMediation.CBMediationironSource, VERSION);
                         Chartboost.setCustomId(userId);
                         Sdk.get().track.traceMediation(CHARTBOOST_CACHE_INTERSTITIAL, "", ADAPTER_NAME, VERSION);
                         Chartboost.setAutoCacheAds(true);
@@ -144,11 +145,12 @@ class ChartboostAdapter extends AbstractAdapter {
                         Chartboost.onResume(activity);
                     }
 
+                    if (ChartboostAdapter.this.mInitiatedSuccessfully) ChartboostAdapter.this.reportInterstitialInitSuccess();
                     if (type.equals("RV")) {
                         Sdk.get().track.traceMediation(CHARTBOOST_CACHE_REWARDED_VIDEO, "Default", ADAPTER_NAME, VERSION);
                         Chartboost.cacheRewardedVideo("Default");
-                    } else if (type.equals("IS") && ChartboostAdapter.this.mInitiatedSuccessfully) {
-                        ChartboostAdapter.this.reportInterstitialInitSuccess();
+                    } else if (type.equals("IS")) {
+                        IronSource.loadInterstitial();
                     }
 
                 }
