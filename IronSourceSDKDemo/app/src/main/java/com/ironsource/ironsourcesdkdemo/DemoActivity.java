@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.chartboost.sdk.Chartboost;
 import com.ironsource.mediationsdk.IronSource;
 import com.ironsource.mediationsdk.logger.IronSourceError;
 import com.ironsource.mediationsdk.model.Placement;
@@ -25,31 +26,26 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
     private Button mVideoButton;
     private Button mInterstitialShowButton;
 
-    private Placement mPlacement;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_demo);
+        String type = null;
+        if (getIntent() != null) type = getIntent().getStringExtra("type");
         initUIElements();
-        initIronSource();
+        initIronSource(type);
     }
 
-    private void initIronSource() {
-        // Be sure to set a listener to each product that is being initiated
-        // set the IronSource rewarded video listener
-        IronSource.setRewardedVideoListener(this);
-        // set the interstitial listener
-        IronSource.setInterstitialListener(this);
-
-        // set the IronSource user id
+    private void initIronSource(String type) {
+        if (type == null || type.equals("rw")) IronSource.setRewardedVideoListener(this);
+        if (type == null || type.equals("is")) IronSource.setInterstitialListener(this);
         IronSource.setUserId(DUMMY_GAID);
-        // init the IronSource SDK
-        IronSource.init(this, APP_KEY);
+        if (type == null) IronSource.init(this, APP_KEY);
+        else IronSource.init(this, APP_KEY, type.equals("rw") ?
+                IronSource.AD_UNIT.REWARDED_VIDEO : IronSource.AD_UNIT.INTERSTITIAL);
 
         updateButtonsState();
     }
-
 
     @Override
     protected void onResume() {
@@ -118,7 +114,7 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
         final int color;
         if (available) {
             color = Color.BLUE;
-            text = getResources().getString(R.string.show) + " " + getResources().getString(R.string.rv);
+            text = getResources().getString(R.string.show_rv);
         } else {
             color = Color.BLACK;
             text = getResources().getString(R.string.initializing) + " " + getResources().getString(R.string.rv);
@@ -144,7 +140,7 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
         final int color;
         if (available) {
             color = Color.BLUE;
-            text = getResources().getString(R.string.show) + " " + getResources().getString(R.string.is);
+            text = getResources().getString(R.string.show_is);
         } else {
             color = Color.BLACK;
             text = getResources().getString(R.string.initializing) + " " + getResources().getString(R.string.is);
@@ -159,60 +155,58 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
         });
     }
 
+    // --------- stuff for tests --------------------
+
+    private ProgressListener listener;
+
+    public interface ProgressListener {
+        void waitWithTest();
+        void continueWithTest(); // click the show button when the ad is loaded
+    }
+
+    public void setProgressListener(ProgressListener progressListener) {
+        listener = progressListener;
+    }
+
     // --------- IronSource Rewarded Video Listener ---------
 
     @Override
     public void onRewardedVideoAdOpened() {
-        // called when the video is opened
-        Log.d(TAG, "onRewardedVideoAdOpened");
+        // called when the video is opened (clicked on "Earn Coins")
+        Log.e(TAG, "onRewardedVideoAdOpened");
+        if (listener!=null) listener.waitWithTest();
     }
 
     @Override
     public void onRewardedVideoAdClosed() {
-        // called when the video is closed
-        Log.d(TAG, "onRewardedVideoAdClosed");
-        // here we show a dialog to the user if he was rewarded
-        if (mPlacement != null) {
-            // if the user was rewarded
-            showRewardDialog(mPlacement);
-            mPlacement = null;
-        }
     }
 
     @Override
     public void onRewardedVideoAvailabilityChanged(boolean b) {
-        // called when the video availbility has changed
-        Log.d(TAG, "onRewardedVideoAvailabilityChanged" + " " + b);
+        // called when the video availbility has changed (e.g. ad is cached)
+        Log.e(TAG, "onRewardedVideoAvailabilityChanged" + " " + b);
         handleVideoButtonState(b);
+        if (b && listener!=null) listener.continueWithTest();
     }
 
     @Override
     public void onRewardedVideoAdStarted() {
-        // called when the video has started
-        Log.d(TAG, "onRewardedVideoAdStarted");
     }
 
     @Override
     public void onRewardedVideoAdEnded() {
-        // called when the video has ended
-        Log.d(TAG, "onRewardedVideoAdEnded");
     }
 
     @Override
     public void onRewardedVideoAdRewarded(Placement placement) {
         // called when the video has been rewarded and a reward can be given to the user
-        Log.d(TAG, "onRewardedVideoAdRewarded" + " " + placement);
-        mPlacement = placement;
-
+        Log.e(TAG, "onRewardedVideoAdRewarded" + " " + placement);
+        if (listener!=null) listener.continueWithTest();
     }
 
     @Override
     public void onRewardedVideoAdShowFailed(IronSourceError ironSourceError) {
-        // called when the video has failed to show
-        // you can get the error data by accessing the IronSourceError object
-        // IronSourceError.getErrorCode();
-        // IronSourceError.getErrorMessage();
-        Log.d(TAG, "onRewardedVideoAdShowFailed" + " " + ironSourceError);
+        Log.e(TAG, "onRewardedVideoAdShowFailed" + " " + ironSourceError.getErrorMessage());
     }
 
     @Override
@@ -233,15 +227,13 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
         // called when the interstitial is ready
         Log.d(TAG, "onInterstitialAdReady");
         handleInterstitialShowButtonState(true);
+        if (listener!=null) listener.continueWithTest();
+
     }
 
     @Override
     public void onInterstitialAdLoadFailed(IronSourceError ironSourceError) {
-        // called when the interstitial has failed to load
-        // you can get the error data by accessing the IronSourceError object
-        // IronSourceError.getErrorCode();
-        // IronSourceError.getErrorMessage();
-        Log.d(TAG, "onInterstitialAdLoadFailed" + " " + ironSourceError);
+        Log.d(TAG, "onInterstitialAdLoadFailed" + " " + ironSourceError.getErrorMessage());
         handleInterstitialShowButtonState(false);
     }
 
@@ -249,6 +241,7 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
     public void onInterstitialAdOpened() {
         // called when the interstitial is shown
         Log.d(TAG, "onInterstitialAdOpened");
+        if (listener!=null) listener.waitWithTest();
     }
 
     @Override
@@ -256,38 +249,19 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
         // called when the interstitial has been closed
         Log.d(TAG, "onInterstitialAdClosed");
         handleInterstitialShowButtonState(false);
-        IronSource.loadInterstitial();
+        if (listener!=null) listener.waitWithTest();
     }
 
     @Override
     public void onInterstitialAdShowSucceeded() {
         // called when the interstitial has been successfully shown
         Log.d(TAG, "onInterstitialAdShowSucceeded");
+        if (listener!=null) listener.continueWithTest();
     }
 
     @Override
     public void onInterstitialAdShowFailed(IronSourceError ironSourceError) {
-        // called when the interstitial has failed to show
-        // you can get the error data by accessing the IronSourceError object
-        // IronSourceError.getErrorCode();
-        // IronSourceError.getErrorMessage();
-        Log.d(TAG, "onInterstitialAdShowFailed" + " " + ironSourceError);
-        handleInterstitialShowButtonState(false)  ;
+        Log.d(TAG, "onInterstitialAdShowFailed" + " " + ironSourceError.getErrorMessage());
+        handleInterstitialShowButtonState(false);
     }
-
-    public void showRewardDialog(Placement placement) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(DemoActivity.this);
-        builder.setPositiveButton("ok", new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                dialog.dismiss();
-            }
-        });
-        builder.setTitle(getResources().getString(R.string.rewarded_dialog_header));
-        builder.setMessage(getResources().getString(R.string.rewarded_dialog_message) + " " + placement.getRewardAmount() + " " + placement.getRewardName());
-        builder.setCancelable(false);
-        AlertDialog dialog = builder.create();
-        dialog.show();
-    }
-
-
 }

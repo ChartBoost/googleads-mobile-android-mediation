@@ -1,7 +1,8 @@
 <resources>
     <string name="app_name">Integration Demo</string>
     <string name="initializing">Loading</string>
-    <string name="show">Show</string>
+    <string name="show_is">Show Interstitial</string>
+    <string name="show_rv">Show Rewarded Video</string>
     <string name="load">Load</string>
     <string name="rv">Rewarded Video</string>
     <string name="is">Interstitial</string>

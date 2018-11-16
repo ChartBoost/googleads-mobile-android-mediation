@@ -12,6 +12,7 @@ import com.chartboost.sdk.Chartboost.CBFramework;
 import com.chartboost.sdk.Chartboost.CBMediation;
 import com.chartboost.sdk.Libraries.CBLogging.Level;
 import com.chartboost.sdk.Model.CBError.CBImpressionError;
+import com.ironsource.ironsourcesdkdemo.BuildConfig;
 import com.ironsource.mediationsdk.AbstractAdapter;
 import com.ironsource.mediationsdk.IntegrationData;
 import com.ironsource.mediationsdk.IronSource;
@@ -118,15 +119,8 @@ class ChartboostAdapter extends AbstractAdapter {
 
                         Chartboost.startWithAppId(activity, appId, appSignature);
                         Chartboost.setDelegate(ChartboostAdapter.this.mDelegate);
-                        boolean isDebugEnabled = false;
 
-                        try {
-                            isDebugEnabled = true;//ChartboostAdapter.this.isAdaptersDebugEnabled();
-                        } catch (NoSuchMethodError var5) {
-                            Log.e("ChartboostAdapter", "ouch");
-                        }
-
-                        if (isDebugEnabled) {
+                        if (BuildConfig.DEBUG) {
                             Chartboost.setLoggingLevel(Level.ALL);
                         } else {
                             Chartboost.setLoggingLevel(Level.NONE);
@@ -139,17 +133,17 @@ class ChartboostAdapter extends AbstractAdapter {
                         Chartboost.setMediation(CBMediation.CBMediationironSource, VERSION);
                         Chartboost.setCustomId(userId);
                         Sdk.get().track.traceMediation(CHARTBOOST_CACHE_INTERSTITIAL, "", ADAPTER_NAME, VERSION);
-                        Chartboost.setAutoCacheAds(true);
+                        Chartboost.setAutoCacheAds(false); // it is bogus as far as i can see
                         Chartboost.onCreate(activity);
                         Chartboost.onStart(activity);
                         Chartboost.onResume(activity);
                     }
 
-                    if (ChartboostAdapter.this.mInitiatedSuccessfully) ChartboostAdapter.this.reportInterstitialInitSuccess();
                     if (type.equals("RV")) {
                         Sdk.get().track.traceMediation(CHARTBOOST_CACHE_REWARDED_VIDEO, "Default", ADAPTER_NAME, VERSION);
                         Chartboost.cacheRewardedVideo("Default");
                     } else if (type.equals("IS")) {
+                        if (ChartboostAdapter.this.mInitiatedSuccessfully) ChartboostAdapter.this.reportInterstitialInitSuccess();
                         IronSource.loadInterstitial();
                     }
 
@@ -290,7 +284,6 @@ class ChartboostAdapter extends AbstractAdapter {
             } else {
                 ChartboostAdapter.this.updateRVAvailability(true);
             }
-
         }
 
         public void didDismissRewardedVideo(String location) {
@@ -307,7 +300,11 @@ class ChartboostAdapter extends AbstractAdapter {
             if (ChartboostAdapter.this.mActiveRewardedVideoSmash != null) {
                 ChartboostAdapter.this.mActiveRewardedVideoSmash.onRewardedVideoAdClosed();
             }
-
+            Sdk.get().track.traceMediation(CHARTBOOST_CACHE_REWARDED_VIDEO, "Default", ADAPTER_NAME, VERSION);
+            Chartboost.cacheRewardedVideo("Default");
+            if (ChartboostAdapter.this.mActiveRewardedVideoSmash != null) {
+                ChartboostAdapter.this.mActiveRewardedVideoSmash.onRewardedVideoAvailabilityChanged(false);
+            }
         }
 
         public void didClickRewardedVideo(String location) {
@@ -323,7 +320,6 @@ class ChartboostAdapter extends AbstractAdapter {
             if (ChartboostAdapter.this.mActiveRewardedVideoSmash != null) {
                 ChartboostAdapter.this.mActiveRewardedVideoSmash.onRewardedVideoAdRewarded();
             }
-
         }
 
         public void willDisplayVideo(String location) {
@@ -355,7 +351,7 @@ class ChartboostAdapter extends AbstractAdapter {
                     }
                 }
             }
-
+            IronSource.loadInterstitial();
         }
 
         public void didDismissInterstitial(String location) {
@@ -367,7 +363,7 @@ class ChartboostAdapter extends AbstractAdapter {
             if (ChartboostAdapter.this.mActiveInterstitialSmash != null) {
                 ChartboostAdapter.this.mActiveInterstitialSmash.onInterstitialAdClosed();
             }
-
+            IronSource.loadInterstitial();
         }
 
         public void didClickInterstitial(String location) {
