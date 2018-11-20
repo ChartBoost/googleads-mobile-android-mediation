@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.chartboost.sdk.Chartboost;
 import com.chartboost.sdk.ChartboostDelegate;
@@ -342,7 +341,6 @@ class ChartboostAdapter extends AbstractAdapter {
 
         public void didFailToLoadInterstitial(String location, CBImpressionError error) {
             if (ChartboostAdapter.this.mDidCallLoad) {
-                ChartboostAdapter.this.mDidCallLoad = false;
                 Sdk.get().track.traceMediation(DELEGATE_DID_FAIL_TO_LOAD_INTERSTITIAL, location, ADAPTER_NAME, VERSION);
 
                 for (InterstitialSmashListener smash : ChartboostAdapter.this.mAllInterstitialSmashes) {
@@ -350,8 +348,9 @@ class ChartboostAdapter extends AbstractAdapter {
                         smash.onInterstitialAdLoadFailed(ErrorBuilder.buildLoadFailedError(error.toString()));
                     }
                 }
+                IronSource.loadInterstitial();
+                ChartboostAdapter.this.mDidCallLoad = true;
             }
-            IronSource.loadInterstitial();
         }
 
         public void didDismissInterstitial(String location) {

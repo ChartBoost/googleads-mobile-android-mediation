@@ -1,6 +1,9 @@
 package com.ironsource.ironsourcesdkdemo;
 
+import android.support.test.espresso.IdlingPolicies;
 import android.support.test.espresso.IdlingResource;
+
+import java.util.concurrent.TimeUnit;
 
 public class ProgressIdlingResource implements IdlingResource {
 
@@ -8,6 +11,8 @@ public class ProgressIdlingResource implements IdlingResource {
     private boolean idle = false;
 
     ProgressIdlingResource(DemoActivity activity){
+        IdlingPolicies.setMasterPolicyTimeout(2, TimeUnit.MINUTES);
+        IdlingPolicies.setIdlingResourceTimeout(2, TimeUnit.MINUTES);
         activity.setProgressListener (new DemoActivity.ProgressListener() {
                                                @Override
                                                public void waitWithTest() {
@@ -25,7 +30,7 @@ public class ProgressIdlingResource implements IdlingResource {
 
     @Override
     public String getName() {
-        return "My idling resource";
+        return "chartboost ad";
     }
 
     @Override

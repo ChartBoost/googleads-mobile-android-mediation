@@ -1,16 +1,13 @@
 package com.ironsource.ironsourcesdkdemo;
 
 import android.app.Activity;
-import android.content.DialogInterface;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.chartboost.sdk.Chartboost;
 import com.ironsource.mediationsdk.IronSource;
 import com.ironsource.mediationsdk.logger.IronSourceError;
 import com.ironsource.mediationsdk.model.Placement;
@@ -34,14 +31,15 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
         if (getIntent() != null) type = getIntent().getStringExtra("type");
         initUIElements();
         initIronSource(type);
+        IronSource.shouldTrackNetworkState(getApplicationContext(), true);
     }
 
     private void initIronSource(String type) {
-        if (type == null || type.equals("rw")) IronSource.setRewardedVideoListener(this);
-        if (type == null || type.equals("is")) IronSource.setInterstitialListener(this);
+        if (type == null || type.equals("RV")) IronSource.setRewardedVideoListener(this);
+        if (type == null || type.equals("IS")) IronSource.setInterstitialListener(this);
         IronSource.setUserId(DUMMY_GAID);
         if (type == null) IronSource.init(this, APP_KEY);
-        else IronSource.init(this, APP_KEY, type.equals("rw") ?
+        else IronSource.init(this, APP_KEY, type.equals("RV") ?
                 IronSource.AD_UNIT.REWARDED_VIDEO : IronSource.AD_UNIT.INTERSTITIAL);
 
         updateButtonsState();
@@ -50,7 +48,6 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
     @Override
     protected void onResume() {
         super.onResume();
-        // call the IronSource onResume method
         IronSource.onResume(this);
         updateButtonsState();
     }
@@ -58,7 +55,6 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
     @Override
     protected void onPause() {
         super.onPause();
-        // call the IronSource onPause method
         IronSource.onPause(this);
         updateButtonsState();
     }
@@ -81,9 +77,7 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
         mVideoButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                    // check if video is available
                     if (IronSource.isRewardedVideoAvailable())
-                        //show rewarded video
                         IronSource.showRewardedVideo();
             }
         });
@@ -92,9 +86,7 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
         mInterstitialShowButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                    // check if interstitial is available
                     if (IronSource.isInterstitialReady()) {
-                        //show the interstitial
                         IronSource.showInterstitial();
                 }
             }
@@ -167,67 +159,64 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
     public void setProgressListener(ProgressListener progressListener) {
         listener = progressListener;
     }
+    public void waitWithTest() { if (listener!=null) listener.waitWithTest(); }
 
     // --------- IronSource Rewarded Video Listener ---------
 
     @Override
-    public void onRewardedVideoAdOpened() {
-        // called when the video is opened (clicked on "Earn Coins")
-        Log.e(TAG, "onRewardedVideoAdOpened");
-        if (listener!=null) listener.waitWithTest();
-    }
-
-    @Override
-    public void onRewardedVideoAdClosed() {
-    }
-
-    @Override
     public void onRewardedVideoAvailabilityChanged(boolean b) {
-        // called when the video availbility has changed (e.g. ad is cached)
-        Log.e(TAG, "onRewardedVideoAvailabilityChanged" + " " + b);
+        Log.d(TAG, "onRewardedVideoAvailabilityChanged" + " " + b);
         handleVideoButtonState(b);
-        if (b && listener!=null) listener.continueWithTest();
+        if (listener!=null) listener.continueWithTest(); // cached, so proceed with clicking on show
     }
 
-    @Override
-    public void onRewardedVideoAdStarted() {
-    }
 
     @Override
-    public void onRewardedVideoAdEnded() {
+    public void onRewardedVideoAdShowFailed(IronSourceError ironSourceError) {
+        // bug: not called when the video is force closed (e.g. on slow devices) before it even plays
+        Log.d(TAG, "onRewardedVideoAdShowFailed" + " " + ironSourceError.getErrorMessage());
+        handleVideoButtonState(false);
     }
 
     @Override
     public void onRewardedVideoAdRewarded(Placement placement) {
-        // called when the video has been rewarded and a reward can be given to the user
-        Log.e(TAG, "onRewardedVideoAdRewarded" + " " + placement);
+        // called when the video has been rewarded (watched a certain percentage of the video)
         if (listener!=null) listener.continueWithTest();
-    }
 
+    }
     @Override
-    public void onRewardedVideoAdShowFailed(IronSourceError ironSourceError) {
-        Log.e(TAG, "onRewardedVideoAdShowFailed" + " " + ironSourceError.getErrorMessage());
+    public void onRewardedVideoAdOpened() {
+        // called when the video is opened (clicked on "Earn Coins")
     }
-
     @Override
     public void onRewardedVideoAdClicked(Placement placement) {
-        
+        // not interested in this for now
+    }
+    @Override
+    public void onRewardedVideoAdClosed() {
+        handleVideoButtonState(IronSource.isRewardedVideoAvailable());
+    }
+    @Override
+    public void onRewardedVideoAdStarted() {
+        // buggy
+    }
+    @Override
+    public void onRewardedVideoAdEnded() {
+        // buggy
     }
 
     // --------- IronSource Interstitial Listener ---------
 
     @Override
     public void onInterstitialAdClicked() {
-        // called when the interstitial has been clicked
         Log.d(TAG, "onInterstitialAdClicked");
     }
 
     @Override
     public void onInterstitialAdReady() {
-        // called when the interstitial is ready
         Log.d(TAG, "onInterstitialAdReady");
         handleInterstitialShowButtonState(true);
-        if (listener!=null) listener.continueWithTest();
+        if (listener!=null) listener.continueWithTest(); // cached, so proceed with clicking on show
 
     }
 
@@ -239,24 +228,21 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
 
     @Override
     public void onInterstitialAdOpened() {
-        // called when the interstitial is shown
         Log.d(TAG, "onInterstitialAdOpened");
-        if (listener!=null) listener.waitWithTest();
+        if (listener!=null) listener.waitWithTest(); // play the video
     }
 
     @Override
     public void onInterstitialAdClosed() {
-        // called when the interstitial has been closed
         Log.d(TAG, "onInterstitialAdClosed");
         handleInterstitialShowButtonState(false);
-        if (listener!=null) listener.waitWithTest();
+        if (listener!=null) listener.waitWithTest(); // cache another one
     }
 
     @Override
     public void onInterstitialAdShowSucceeded() {
-        // called when the interstitial has been successfully shown
         Log.d(TAG, "onInterstitialAdShowSucceeded");
-        if (listener!=null) listener.continueWithTest();
+        if (listener!=null) listener.continueWithTest(); // when started playing, time to proceed with Back (CB bug: if video is force closed and cannot play, this is still triggered)
     }
 
     @Override
