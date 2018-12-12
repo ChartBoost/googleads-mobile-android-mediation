@@ -308,6 +308,7 @@ class ChartboostAdapter extends AbstractAdapter {
         public void didCloseRewardedVideo(String location) {
             Sdk.get().track.traceMediation(DELEGATE_DID_CLOSE_REWARDED, location, ADAPTER_NAME, VERSION);
             // FIXME -- why IronSource is not calling onRewardedVideoAdClosed() here?
+            Sdk.get().track.traceMediation(CHARTBOOST_CACHE_REWARDED_VIDEO, location, ADAPTER_NAME, VERSION);
             Chartboost.cacheRewardedVideo(location);
             mLocationToRvListener.get(location).onRewardedVideoAvailabilityChanged(false);
         }
