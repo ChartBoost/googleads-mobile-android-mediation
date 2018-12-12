@@ -160,7 +160,7 @@ class ChartboostAdapter extends AbstractAdapter {
                             Chartboost.setFramework(Chartboost.CBFramework.CBFrameworkUnity, getPluginFrameworkVersion());
                         Chartboost.setMediation(Chartboost.CBMediation.CBMediationironSource, VERSION);
                         Chartboost.setCustomId(userId);
-                        Chartboost.setAutoCacheAds(false); // something is broken here, will manually load in didInitialize instead (same as you already do for RV)
+                        Chartboost.setAutoCacheAds(true); // THIS IS ONLY FOR REWARDED, GAME NEEDS TO CACHE INTERSTITIALS MANUALLY
 
                         Chartboost.onCreate(activity);
                         Chartboost.onStart(activity);
@@ -309,7 +309,6 @@ class ChartboostAdapter extends AbstractAdapter {
             Sdk.get().track.traceMediation(DELEGATE_DID_CLOSE_REWARDED, location, ADAPTER_NAME, VERSION);
             // FIXME -- why IronSource is not calling onRewardedVideoAdClosed() here?
             Sdk.get().track.traceMediation(CHARTBOOST_CACHE_REWARDED_VIDEO, location, ADAPTER_NAME, VERSION);
-            Chartboost.cacheRewardedVideo(location);
             mLocationToRvListener.get(location).onRewardedVideoAvailabilityChanged(false);
         }
 
@@ -349,7 +348,6 @@ class ChartboostAdapter extends AbstractAdapter {
             Sdk.get().track.traceMediation(DELEGATE_DID_FAIL_TO_LOAD_INTERSTITIAL, location, ADAPTER_NAME, VERSION);
             if (mLocationToIsListener.get(location) != null)
                 mLocationToIsListener.get(location).onInterstitialAdLoadFailed(ErrorBuilder.buildLoadFailedError(error.toString()));
-            // TODO: shouldn't we re-try with IronSource.loadInterstitial(); or are we afraid of error loops
         }
 
         // Called after an interstitial has been dismissed.
@@ -365,7 +363,6 @@ class ChartboostAdapter extends AbstractAdapter {
         public void didCloseInterstitial(String location) {
             Sdk.get().track.traceMediation(DELEGATE_DID_CLOSE_INTERSTITIAL, location, ADAPTER_NAME, VERSION);
             // FIXME -- why IronSource is not calling onInterstitialAdClosed() here?
-            IronSource.loadInterstitial();
         }
 
         // Called after an interstitial has been clicked.
@@ -399,7 +396,6 @@ class ChartboostAdapter extends AbstractAdapter {
                 }
 
                 for (String key : mLocationToIsListener.keySet()) {
-                    IronSource.loadInterstitial();
                     mLocationToIsListener.get(key).onInterstitialInitSuccess();
                 }
             }

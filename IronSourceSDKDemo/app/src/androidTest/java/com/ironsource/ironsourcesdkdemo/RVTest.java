@@ -26,25 +26,11 @@ import static org.hamcrest.CoreMatchers.containsString;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
-public class DemoActivityTest {
+public class RVTest {
 
     @Rule
     public ActivityTestRule<DemoActivity> activityTestRule =
             new ActivityTestRule<>(DemoActivity.class, false, false);
-
-    @Test
-    public void openInterstitialACoupleOfTimes() {
-        Intent intent = new Intent();
-        intent.putExtra("type", "IS");
-        activityTestRule.launchActivity(intent);
-        IdlingRegistry.getInstance().register(new ProgressIdlingResource(activityTestRule.getActivity()));
-        activityTestRule.getActivity().waitWithTest();
-        for (int i = 0; i < 3; i++) {
-            onView(withText(R.string.show_is)).check(matches(isDisplayed())).perform(click());
-            Espresso.pressBack();
-        }
-        activityTestRule.finishActivity();
-    }
 
     @Test
     public void watchRewardedVideosACoupleOfTimes() {
@@ -52,10 +38,8 @@ public class DemoActivityTest {
         intent.putExtra("type", "RV");
         activityTestRule.launchActivity(intent);
         IdlingRegistry.getInstance().register(new ProgressIdlingResource(activityTestRule.getActivity()));
-        activityTestRule.getActivity().waitWithTest(); // wait until next ad loads
         for (int i = 0; i < 3; i++) {
-            // if this test never starts, you need to switch to a new device
-            // RVs seem to be traffic capped as opposed to interstitials
+            activityTestRule.getActivity().waitWithTest(); // wait until next ad loads
             onView(withText(R.string.show_rv)).check(matches(isDisplayed())).perform(click());
             onWebView()
                     .withNoTimeout()
@@ -65,7 +49,6 @@ public class DemoActivityTest {
                     .perform(webClick());
             activityTestRule.getActivity().waitWithTest();
             Espresso.pressBack();
-            activityTestRule.getActivity().waitWithTest(); // wait until next ad loads
         }
 
         activityTestRule.finishActivity();

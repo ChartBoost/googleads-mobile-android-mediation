@@ -43,6 +43,8 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
                 IronSource.AD_UNIT.REWARDED_VIDEO : IronSource.AD_UNIT.INTERSTITIAL);
 
         updateButtonsState();
+
+        IronSource.loadInterstitial();
     }
 
     @Override
@@ -167,7 +169,7 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
     public void onRewardedVideoAvailabilityChanged(boolean b) {
         Log.d(TAG, "onRewardedVideoAvailabilityChanged" + " " + b);
         handleVideoButtonState(b);
-        if (listener!=null) listener.continueWithTest(); // cached, so proceed with clicking on show
+        if (listener!=null && b) listener.continueWithTest(); // cached, so proceed with clicking on show
     }
 
 
@@ -235,6 +237,8 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
     @Override
     public void onInterstitialAdClosed() {
         Log.d(TAG, "onInterstitialAdClosed");
+        IronSource.loadInterstitial();
+
         handleInterstitialShowButtonState(false);
         if (listener!=null) listener.waitWithTest(); // cache another one
     }
