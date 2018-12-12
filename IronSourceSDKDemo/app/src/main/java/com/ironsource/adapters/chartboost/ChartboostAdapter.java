@@ -307,9 +307,6 @@ class ChartboostAdapter extends AbstractAdapter {
         @Override
         public void didCloseRewardedVideo(String location) {
             Sdk.get().track.traceMediation(DELEGATE_DID_CLOSE_REWARDED, location, ADAPTER_NAME, VERSION);
-            // FIXME -- why IronSource is not calling onRewardedVideoAdClosed() here?
-            Sdk.get().track.traceMediation(CHARTBOOST_CACHE_REWARDED_VIDEO, location, ADAPTER_NAME, VERSION);
-            mLocationToRvListener.get(location).onRewardedVideoAvailabilityChanged(false);
         }
 
         // Called after a rewarded video has been clicked.
@@ -362,7 +359,6 @@ class ChartboostAdapter extends AbstractAdapter {
         @Override
         public void didCloseInterstitial(String location) {
             Sdk.get().track.traceMediation(DELEGATE_DID_CLOSE_INTERSTITIAL, location, ADAPTER_NAME, VERSION);
-            // FIXME -- why IronSource is not calling onInterstitialAdClosed() here?
         }
 
         // Called after an interstitial has been clicked.
