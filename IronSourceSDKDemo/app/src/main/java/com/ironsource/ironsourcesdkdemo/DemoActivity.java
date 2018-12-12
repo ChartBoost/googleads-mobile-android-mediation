@@ -196,7 +196,6 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
     }
     @Override
     public void onRewardedVideoAdClosed() {
-        handleVideoButtonState(IronSource.isRewardedVideoAvailable());
     }
     @Override
     public void onRewardedVideoAdStarted() {

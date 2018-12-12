@@ -38,8 +38,8 @@ public class RVTest {
         intent.putExtra("type", "RV");
         activityTestRule.launchActivity(intent);
         IdlingRegistry.getInstance().register(new ProgressIdlingResource(activityTestRule.getActivity()));
+        activityTestRule.getActivity().waitWithTest(); // wait until next ad loads
         for (int i = 0; i < 3; i++) {
-            activityTestRule.getActivity().waitWithTest(); // wait until next ad loads
             onView(withText(R.string.show_rv)).check(matches(isDisplayed())).perform(click());
             onWebView()
                     .withNoTimeout()
