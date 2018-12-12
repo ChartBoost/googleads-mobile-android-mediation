@@ -37,6 +37,7 @@ import com.google.android.gms.ads.reward.RewardedVideoAdListener;
  */
 public class MainActivity extends AppCompatActivity {
 
+    private final static String testDevice = "84E084E9E8E6E912CEBE7AC1B5468D22"; // AdMob will write you to logcat about this, must update for each device (there is a rate limiter I guess)
     private InterstitialAd adapterInterstitial;
     private RewardedVideoAd rewardedVideoAd;
     private Button adapterButton;
@@ -83,10 +84,10 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onAdClosed() {
-                adapterInterstitial.loadAd(new AdRequest.Builder().addTestDevice("3A72DD7886EC9C8590E79F0F4E72F915").build());
+                adapterInterstitial.loadAd(new AdRequest.Builder().addTestDevice(testDevice).build());
             }
         });
-        adapterInterstitial.loadAd(new AdRequest.Builder().addTestDevice("3A72DD7886EC9C8590E79F0F4E72F915").build());
+        adapterInterstitial.loadAd(new AdRequest.Builder().addTestDevice(testDevice).build());
 
 
         //  rewarded video
@@ -145,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
     private void loadRewardedVideoAd() {
         adapterVideoButton.setEnabled(false);
         rewardedVideoAd.loadAd(getString(R.string.adapter_rewarded_video_ad_unit_id),
-                new AdRequest.Builder().addTestDevice("3A72DD7886EC9C8590E79F0F4E72F915").build());
+                new AdRequest.Builder().addTestDevice(testDevice).build());
     }
 
     // these are recommended as per https://developers.google.com/admob/android/mediation/chartboost

@@ -38,7 +38,8 @@ public class DemoActivityTest {
         intent.putExtra("type", "IS");
         activityTestRule.launchActivity(intent);
         IdlingRegistry.getInstance().register(new ProgressIdlingResource(activityTestRule.getActivity()));
-        for (int i = 0; i < 10; i++) {
+        activityTestRule.getActivity().waitWithTest();
+        for (int i = 0; i < 3; i++) {
             onView(withText(R.string.show_is)).check(matches(isDisplayed())).perform(click());
             Espresso.pressBack();
         }
@@ -51,7 +52,8 @@ public class DemoActivityTest {
         intent.putExtra("type", "RV");
         activityTestRule.launchActivity(intent);
         IdlingRegistry.getInstance().register(new ProgressIdlingResource(activityTestRule.getActivity()));
-        for (int i = 0; i < 10; i++) {
+        activityTestRule.getActivity().waitWithTest(); // wait until next ad loads
+        for (int i = 0; i < 3; i++) {
             // if this test never starts, you need to switch to a new device
             // RVs seem to be traffic capped as opposed to interstitials
             onView(withText(R.string.show_rv)).check(matches(isDisplayed())).perform(click());
@@ -61,7 +63,7 @@ public class DemoActivityTest {
                     .withContextualElement(findElement(Locator.ID, "pre-roll-cta"))
                     .check(webMatches(getText(), containsString("Earn Coins")))
                     .perform(webClick());
-            activityTestRule.getActivity().waitWithTest(); // the onRewardedVideoAdOpened is delayed so we cannot use it to pause the test (as we should)
+            activityTestRule.getActivity().waitWithTest();
             Espresso.pressBack();
             activityTestRule.getActivity().waitWithTest(); // wait until next ad loads
         }

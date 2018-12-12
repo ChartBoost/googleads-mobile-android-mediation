@@ -242,7 +242,7 @@ public class DemoActivity extends Activity implements RewardedVideoListener, Int
     @Override
     public void onInterstitialAdShowSucceeded() {
         Log.d(TAG, "onInterstitialAdShowSucceeded");
-        if (listener!=null) listener.continueWithTest(); // when started playing, time to proceed with Back (CB bug: if video is force closed and cannot play, this is still triggered)
+        if (listener!=null) listener.continueWithTest(); // when started playing, time to proceed with Back (we currently don't have a delegate that tells you when an ad finished playing)
     }
 
     @Override

@@ -34,7 +34,7 @@ dependencies {
     implementation 'com.android.support:support-v4:28.0.0'
     implementation 'com.google.android.gms:play-services-ads-identifier:16.0.0'
     implementation 'com.google.android.gms:play-services-base:16.0.1'
-    implementation 'com.ironsource.sdk:mediationsdk:6.7.12@jar'
+    implementation 'com.ironsource.sdk:mediationsdk:6.8.0.1@jar'
 
     androidTestImplementation "com.android.support:support-annotations:28.0.0"
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
